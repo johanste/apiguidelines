@@ -1,0 +1,282 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Example canonical service",
+        "description": "Service giving examples of good Azure service design practices",
+        "version": "2019-10-28"
+    },
+    "paths": {
+        "/projects": {
+            "get": {
+                "operationId": "projects_list",
+                "tags": [
+                    "Projects"
+                ],
+                "parameters": [
+                    {
+                        "name": "$expand",
+                        "in": "query",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List all projects",
+                        "schema": {
+                            "type": "object",
+                            "required": [
+                                "values"
+                            ],
+                            "properties": {
+                                "values": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/Project"
+                                    }
+                                },
+                                "nextLink": {
+                                    "type": "string",
+                                    "format": "uri"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Non-successful request",
+                        "schema": {
+                            "$ref": "#/definitions/CloudError"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{projectName}": {
+            "get": {
+                "tags": [
+                    "Projects"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectName",
+                        "type": "string",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved the project",
+                        "schema": {
+                            "$ref": "#/definitions/Project"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags":[
+                    "Projects"
+                ],
+                "operationId": "projects_createOrReplace",
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/IfMatch"
+                    },
+                    {
+                        "$ref": "#/parameters/IfNoneMatch"
+                    },
+                    {
+                        "in": "body",
+                        "name": "project",
+                        "schema": {
+                            "$ref": "#/definitions/Project"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully replaced an existing project",
+                        "schema": {
+                            "$ref": "#/definitions/Project"
+                        }
+                    },
+                    "201": {
+                        "description": "Successfully created a new",
+                        "schema": {
+                            "$ref": "#/definitions/Project"
+                        }
+                    },
+                    "default": {
+                        "description": "Failed to create or replace the project",
+                        "schema": {
+                            "$ref": "#/definitions/CloudError"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "responses": {
+                    "200": {
+                        "description": "Successfully patched (updated) the project",
+                        "schema": {
+                            "$ref": "#/definitions/Project"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{projectName}/references": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "projectName",
+                    "type": "string",
+                    "required": true
+                }
+            ],
+            "post": {
+                "operationId": "Add a new reference",
+                "parameters": [
+                    {
+                        "name": "projectReference",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ProjectReference"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Project reference updated",
+                        "headers": {
+                            "location": {
+                                "type": "string"
+                            }
+                        },
+                        "schema": {
+                            "$ref": "#/definitions/ProjectReference"
+                        }
+                    },
+                    "201": {
+                        "description": "Project reference created",
+                        "headers": {
+                            "location": {
+                                "type": "string"
+                            }
+                        },
+                        "schema": {
+                            "$ref": "#/definitions/ProjectReference"
+                        }
+                    }
+                }
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved the project reference",
+                        "schema": {
+                            "required": [
+                                "values"
+                            ],
+                            "properties": {
+                                "value": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/ProjectReference"
+                                    }
+                                },
+                                "nextLink": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "parameters": {
+        "IfMatch": {
+            "in": "header",
+            "name": "If-Match",
+            "type": "string"
+        },
+        "IfNoneMatch": {
+            "in": "header",
+            "name": "If-None-Match",
+            "type": "string"
+        }
+    },
+    "definitions": {
+        "Project": {
+            "type": "object",
+            "required": [
+                "etag",
+                "id",
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "etag": {
+                    "type": "string",
+                    "readOnly": true
+                },
+                "id": {
+                    "type": "string",
+                    "readOnly": true
+                },
+                "references": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/ProjectReference"
+                    }
+                }
+            }
+        },
+        "ProjectReference": {
+            "type": "object",
+            "required": [
+                "projectId",
+                "etag"
+            ],
+            "properties": {
+                "etag": {
+                    "type": "string",
+                    "readOnly": true
+                },
+                "name": {
+                    "type": "string",
+                    "readOnly": true
+                },
+                "projectId": {
+                    "type": "string"
+                }
+            }
+        },
+        "CloudError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "object",
+                    "required": [
+                        "code"
+                    ],
+                    "properties": {
+                        "code": {
+                            "type": "string"
+                        },
+                        "message": {
+                            "type": "string"
+                        },
+                        "innerError": {
+                            "$ref": "#/definitions/CloudError"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
