@@ -176,6 +176,29 @@ Creating a new pull request is done using a POST operation against the `/service
 
 Creating a new repository:
 
+### Long running operations
+
+## Long running operation that creates resource
+
+- **DO** follow the [hybrid model](https://github.com/microsoft/api-guidelines/blob/vNext/Guidelines.md#1323-post-hybrid-model) when creating resources.
+
+Specifically:
+
+- **DO** return a 201 - Created status code for initial request (POST, PUT or PATCH). Do include the properties of the newly created resource in the response body.
+- **DO** provide a `status` property in the resource that tracks its state.
+- **DO NOT** provide a corresponding `Operation` (located by the `Operation-Location` header in the response) resource tracking the creation of the resource unless it is required to track additional state for the resource creation. This is rare.
+- **DO** respond with a 200 - OK status code if a client does a `GET` on the newly created resource. In other words, the resource should be visible on its target location immediately after the service has responded with a 201 for the initial request.
+
+TODO: insert call requests/responses here...
+
+## Other long running operations
+
+- **DO** provide an `Operation` resource (and corresponding `Operation-Location` header if one ore more are true:
+    - multiple operations can be running in parallell for a given resource/path.
+    - the result of the operation is one or more computed values.
+- **DO NOT** provide an `Operation` resource if:
+    - only one operation can be run at a time. Instead, track the status on the target resource itself. 
+        - Example: you have to finish rebooting a virtual machine before you can reboot it again.
 # Appendix A - HTTP status codes
 |Status code|Meaning|
 |200|Success|
