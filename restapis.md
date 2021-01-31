@@ -5,28 +5,39 @@ This document is intended to provide a normative description and recommendations
 
 ## TLDR
 
-- **DO** use query string version parameters unless your family of services has overridden this. 
-- **DO** use date-based API versions.
-- **DO** append a -preview suffix for API versions that are in preview.
+### Request Methods
 - **DO** use the correct HTTP verbs for your operation.
-- **DO** use the correct HTTP status codes for your responses.
 - **DO** use PUT against the canonical path of a resource in order to create or replace it if the name of the resource is known a priori.
 - **DO** use POST against the canonical path to the collection to create an item in the identity (name) of the resource to create is not known a priori.
+- **DO** support updates of all mutable properties of resources using PATCH.
+- **DO** support JSON merge-patch as the content type for PATCH operations against resources. You **MAY** also support JSON patch.
+- **DO** document if your POST or PATCH operation is idempotent. See also: the [`x-ms-idempotent`](#traits_idempotent) trait. TODO: Add support for new extension
+
+### Response Status Codes
+- **DO** use the correct HTTP status codes for your responses.
+- **DO** document your top level error codes and under what circumstances they can occur. 
+
+### Resources
 - **DO** use the same model as request body and response content for any given URL.
 - **DO NOT** use semantically meaningful `null`s in your stored resources. That is, do not distinguish between a null value for a description of a resource and not having a description for the resource.
-- **DO** support updates of all mutable properties of resources using PATCH.
 - **DO** use maps for collections of named resources rather than arrays of objects.
 - **DO** use arrays only for collections where order is relevant *or* where the items in the collection does not have a name/identifier.
-- **DO** support JSON merge-patch as the content type for PATCH operations against resources. You **may** also support JSON patch.
 - **DO** document which properties can be updated after a resource has been created.
+- **DO** model child resources as collections of the parent resource when the relationship is a composition.
+- **DO** allow direct references of child resources for composite resources.
+
+### Conditional Requests
 - **DO** support conditional requests (`if-match`, `if-none-match` and `if-not-modified` headers) for your API. See [optimistic concurrency](#restapi_optimistic_concurrency) for more information.
 - **DO** support ETags for your resources.
 - **DO** use a stable checksum of the resource representation as the `ETag` value. Do *not* use a random value or an implicit last modified time (or derivation thereof) as the value.
-- **DO** document your top level error codes and under what circumstances they can occur. 
+
+### Versions
+- **DO** use query string version parameters unless your family of services has overridden this. 
+- **DO** use date-based API versions.
+- **DO** append a -preview suffix for API versions that are in preview.
+
+### Service
 - **DO** document what property changes will cause service interruption/downtime (e.g. compute resource will be rebooted)
-- **DO** document if your POST or PATCH operation is idempotent. See also: the [`x-ms-idempotent`](#traits_idempotent) trait. TODO: Add support for new extension
-- **DO** model child resources as collections of the parent resource when the relationship is a composition.
-- **DO** allow direct references of child resources for composite resources.
 
 
 ## How to design your API
@@ -36,7 +47,7 @@ REST APIs are, by definition, resource centric. Resources represent the nouns in
 
 > The line between nouns and verbs can sometimes be blurry - see [actions](#resource_actions) below...
 
-Since users of your service will be interacting with your resources, it is important that they map to the users conceptual model of the service. A good litmus test is that you should be able to use the name of the resources in the blog post that introduces your service to your users.
+Since users of your service will be interacting with your resources, it is important that they map to the user's conceptual model of the service. A good litmus test is that you should be able to use the name of the resources in the blog post that introduces your service to your users.
 
 #### Canonical URLs of resources
 
@@ -86,10 +97,27 @@ The english word _request_ is both a noun and a verb.
 
 ## Support normal HTTP semantics
 
+Much of HTTP semantics are nicely described in [RFC 7231](https://tools.ietf.org/html/rfc7231).  Briefly, each HTTP message is either a request sent from a client regarding a resource and an action to be applied in the context of that resource, or a response sent from a server regarding the result of its attempt to parse and execute the requested action.  
+
+A request consists of a resource identifier or URI, a request method, request headers, and sometimes a payload representing the resource or desired action.  
+
+A response consists of a response status code, response headers, and sometimes a payload representing the resource or the result of an action applied in the context of that resource.
+
+It is worth noting the similarity of HTTP to an object oriented programming model, in that there are objects or resources (nouns) and actions or request methods (verbs) that are applied to them.  One notable difference, however, is that a design goal of HTTP is to separate resource identification from request semantics.  As a result, a resource is identified separately from the resource method -- one of a fixed set of verbs that can be applied to the resource.
+
 ### 1. Use the correct verbs
-### 2. Optimistic concurrency using etags/if-match
-### 3. Status codes
-### 4. Headers
+Commonly used request methods include:
+* [GET](https://tools.ietf.org/html/rfc7231#section-4.3.1) - requests the transfer of a current representation for the target resource.  Corresponds to Read in the CRUD operations.
+* [HEAD](https://tools.ietf.org/html/rfc7231#section-4.3.2) - identical to GET, except server must not send a message body in the response.  Can be used to determine if a resource has been modified since the client last accessed it.
+* [PUT](https://tools.ietf.org/html/rfc7231#section-4.3.4) - requests that a target resource be created or replaced with the representation in the payload.  Corresponse to Create in the CRUD operations, or Update with replace semantics.
+* [PATCH](https://tools.ietf.org/html/rfc5789#section-2) - requests that a set of changes in the message body be applied to the target resource.  Corresponds to Update in the CRUD operations, with semantics specific to the JSON content type.
+* [DELETE](https://tools.ietf.org/html/rfc7231#section-4.3.5) - requests that the server remove the target resource.  Corresponds to Delete in the CRUD operations.
+* [POST](https://tools.ietf.org/html/rfc7231#section-4.3.3) - requests that the target resource process the payload according to the specific semantics of that resource.  Allows functionality beyond the CRUD operations.
+
+### 2. Status codes
+### 3. Headers
+[TODO: which to call out?  Separate into request and response headers?  What "stories" to highlight here?]
+### 4. Optimistic concurrency using etags/if-match
 
 ## Cookbook - API patterns
 
